@@ -1,0 +1,268 @@
+:root {
+    --main-purple: #5d15a5;
+    --dark-purple: #3b0d6b;
+    --light-gray-bg: #f4f4f4;
+    /* ATUALIZAÇÃO A11Y: Cor para o anel de foco */
+    --focus-ring-color: #005fcc; 
+}
+
+/* ===== ATUALIZAÇÃO: IMAGEM DE FUNDO EM TELA CHEIA ===== */
+/* Remove margens padrão e garante altura total */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: Arial, sans-serif;
+    /* background-color: #e9e9e9;  <- Removido pois a imagem cobrirá */
+}
+
+/* Faz o container ocupar toda a tela */
+.page-content {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* Evita barras de rolagem indesejadas se a imagem passar um pouco */
+}
+
+/* Faz a imagem preencher o container sem distorcer */
+.page-content img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* A mágica acontece aqui: cobre tudo mantendo a proporção */
+    display: block;    /* Remove espaço extra que imagens inline às vezes têm */
+}
+
+
+/* ===== BOTÃO FLUTUANTE (CHATBOT - DIREITA) ===== */
+#float-button {
+    position: fixed; /* Mantém o botão fixo na tela */
+    bottom: 20px;    /* 20 pixels de distância da parte de baixo */
+    right: 20px;     /* 20 pixels de distância da parte da direita */
+    z-index: 1000;   /* Garante que ele fique sobre os outros elementos */
+    
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--main-purple);
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+#float-button:hover { transform: scale(1.1); }
+
+#float-button img {
+    width: 35px;
+    filter: brightness(0) invert(1);
+}
+
+
+/* ===== JANELA PRINCIPAL (MAIN WINDOW - DIREITA) ===== */
+#main-window {
+    position: fixed;
+    bottom: 20px; /* Alinhado com a posição do botão */
+    right: 20px;  /* Alinhado com a posição do botão */
+    z-index: 1001; /* Z-index maior para a janela ficar NA FRENTE do botão */
+    
+    width: 380px;
+    height: 75vh;
+    max-height: 650px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    
+    opacity: 0;
+    transform: scale(0.5) translateY(50%); /* Animação começa pequeno e embaixo */
+    transition: all 0.3s ease-out;
+    pointer-events: none; /* Não pode ser clicado quando invisível */
+}
+
+/* Quando a janela estiver visível */
+#main-window.visible {
+    opacity: 1;
+    transform: scale(1) translateY(0); /* Animação para o tamanho e posição final */
+    pointer-events: auto;
+}
+
+
+/* --- SEÇÕES INTERNAS (SCREENS) --- */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+/* --- ELEMENTOS COMUNS (HEADER, BOTÕES) --- */
+.header {
+    background: linear-gradient(90deg, var(--main-purple), var(--dark-purple));
+    height: 70px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+}
+.back-button {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--main-purple);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 3;
+    font-size: 16px;
+}
+.logo-header {
+    height: 34px;
+    max-width: 65%;
+    object-fit: contain;
+}
+
+
+/* --- TELA DE BOAS-VINDAS (WELCOME-SCREEN) --- */
+#welcome-screen {
+    background-color: var(--main-purple);
+}
+.welcome-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.logo-central {
+    max-width: 70%;
+    margin-bottom: 40px;
+}
+#start-chat-button {
+    width: 80%;
+    padding: 15px;
+    font-size: 16px;
+    border-radius: 30px;
+    border: 2px solid white;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#start-chat-button:hover { background-color: rgba(255,255,255,0.1); }
+
+
+/* --- TELA DE CHAT (CHAT-SCREEN) --- */
+.messages-area {
+    flex-grow: 1;
+    background-color: var(--light-gray-bg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+}
+.message {
+    padding: 12px 18px;
+    border-radius: 18px;
+    max-width: 75%;
+    line-height: 1.5;
+    word-wrap: break-word; /* Adiciona quebra de linha para palavras longas */
+}
+.message.bot {
+    background-color: white;
+    border-bottom-left-radius: 5px;
+    align-self: flex-start;
+}
+.message.user {
+    background-color: var(--dark-purple);
+    border-bottom-right-radius: 5px;
+    color: white;
+    align-self: flex-end;
+}
+.input-area {
+    background-color: #fff;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #ddd;
+}
+.input-area span {
+    font-size: 22px;
+    color: #555;
+    cursor: pointer;
+}
+.input-area input {
+    flex-grow: 1;
+    border: none;
+    font-size: 15px;
+    /* ATUALIZAÇÃO A11Y: Removido 'outline: none;' -> :focus-visible cuidará disso */
+}
+.send-button {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--main-purple);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.send-button img {
+    width: 20px;
+    filter: brightness(0) invert(1);
+}
+
+
+/* ===== ATUALIZAÇÃO A11Y (FOCO VISÍVEL) ===== */
+button:focus-visible,
+input:focus-visible {
+    outline: 3px solid var(--focus-ring-color);
+    outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible) {
+    outline: none;
+}
+
+
+/* ===== POSICIONAMENTO DO VLibras (ESQUERDA) ===== */
+/* Sobrescreve os estilos padrão do VLibras para forçá-lo à ESQUERDA */
+[vw].enabled {
+    left: 0 !important;
+    right: auto !important;
+}
+
+[vw-access-button] {
+    left: 20px !important; /* Distância da borda esquerda */
+    right: auto !important;
+    bottom: 20px !important;
+}
+
+[vw-plugin-wrapper] {
+    left: 20px !important; /* Alinha o widget aberto com o botão */
+    right: auto !important;
+    /* O VLibras geralmente ajusta o 'bottom' automaticamente quando aberto */
+}

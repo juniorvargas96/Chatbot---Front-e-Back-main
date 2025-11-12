@@ -1,0 +1,14 @@
+# Frameworks da API
+fastapi
+uvicorn[standard]
+Flask
+
+# IA e Processamento
+google-generativeai
+sentence-transformers
+scikit-learn
+beautifulsoup4
+
+# Utilitários
+python-dotenv
+requests
