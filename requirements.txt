@@ -12,3 +12,14 @@ beautifulsoup4
 # Utilitários
 python-dotenv
 requests
+
+fastapi
+uvicorn
+python-dotenv
+requests
+beautifulsoup4
+lxml
+google-generativeai
+sentence-transformers
+numpy
+cryptography
