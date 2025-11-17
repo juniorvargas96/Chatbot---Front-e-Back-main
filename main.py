@@ -32,9 +32,7 @@ def main():
         print("Por favor, tente novamente mais tarde.")
 
     finally:
-        from cache import cache_manager
-        cache_manager.close()
-        logging.info("Cache fechado corretamente")
+        logging.info("Aplicação finalizada.")
 
 if __name__ == "__main__":
     main()

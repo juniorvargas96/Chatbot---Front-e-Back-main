@@ -4,7 +4,6 @@ import threading
 from config.settings import settings
 from utils import Colors
 import logging
-from cache import cache_manager
 from datetime import datetime
 
 

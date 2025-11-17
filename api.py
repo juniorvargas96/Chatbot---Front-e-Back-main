@@ -9,7 +9,6 @@ from scraper import carregar_contexto
 from chat_manager import iniciar_chat_api
 from config.settings import settings
 from logging_config import configurar_logging
-from cache import cache_manager
 
 import logging
 
