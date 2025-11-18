@@ -70,7 +70,7 @@ class Mensagem(BaseModel):
 
 # ---------------------------- Rotas ----------------------------- #
 
-@app.post("/chat/", summary="Enviar pergunta ao NPC")
+@app.post("/chat", summary="Enviar pergunta ao NPC")
 async def chat(mensagem: Mensagem):
     try:
         contexto = await get_contexto()
