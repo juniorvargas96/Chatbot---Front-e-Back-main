@@ -1,3 +1,5 @@
+# api.py
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
@@ -24,8 +26,8 @@ async def lifespan(app: FastAPI):
         logger.info("🚀 Iniciando API (carregamento de contexto será sob demanda).")
         yield  # API ativa aqui
     finally:
-        logger.info("🔒 Encerrando aplicação.")
-        # Removido cache_manager.close() pois não existe e causava crash
+        logger.info("🔒 Encerrando aplicação... (sem cache manager)")
+        # removido cache_manager.close()
         logger.info("✅ Encerramento concluído.")
 
 # ------------------------- Inicialização FastAPI ------------------------ #
@@ -79,7 +81,6 @@ async def chat(mensagem: Mensagem):
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
 
-# Se você NÃO tem cache_manager, essa rota não pode existir.
-# Para evitar erro, removi completamente.
-#
-# Caso queira colocar depois, me manda o arquivo cache_manager.py.
+@app.get("/cache/stats", summary="Placeholder (sem cache manager)")
+def stats():
+    return {"cache": "disabled"}
