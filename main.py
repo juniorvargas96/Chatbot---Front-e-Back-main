@@ -1,3 +1,4 @@
+# main.py
 from utils import limpar_tela, mostrar_cabecalho
 from scraper import carregar_contexto
 from chat_manager import iniciar_chat

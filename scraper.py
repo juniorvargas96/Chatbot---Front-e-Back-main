@@ -1,3 +1,4 @@
+# scraper.py
 import requests
 from bs4 import BeautifulSoup
 from config.settings import settings

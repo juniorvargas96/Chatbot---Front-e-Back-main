@@ -1,3 +1,4 @@
+# cache.py
 import sqlite3
 import hashlib
 import json
@@ -10,7 +11,7 @@ import logging
 # import numpy as np
 
 # Importa as novas funções do módulo que chama o Gemini (ou inclua-as aqui)
-from gemini_api import get_gemini_embedding, calculate_dot_produc
+from gemini_api import get_gemini_embedding, calculate_dot_product
 
 logger = logging.getLogger(__name__)
 
@@ -113,5 +114,102 @@ class ChatCache:
             logger.error(f"Erro ao buscar similaridade no cache: {e}")
             return None
     
-    # ... (O resto dos métodos save_response, get_response, clean_old_cache e stats permanecem os mesmos,
-    # usando _get_embedding e as funções de (des)serialização sem numpy). ...
+    # Adicionando o restante dos métodos para completar a classe (assumindo que existam)
+    
+    def get_response(self, question):
+        # Lógica de cache exata (hash) e fallback para similaridade
+        question_norm = self._normalize_text(question)
+        cache_id = self._generate_id(question_norm)
+
+        cursor = self.conn.execute(
+            "SELECT response, usage_count FROM cache WHERE id = ?",
+            (cache_id,)
+        )
+
+        if result := cursor.fetchone():
+            response, usage = result
+            self.conn.execute(
+                "UPDATE cache SET usage_count = ? WHERE id = ?",
+                (usage + 1, cache_id)
+            )
+            self.conn.commit()
+            logger.info(f"[CACHE HIT - Exata] '{question_norm[:40]}...'")
+            return json.loads(response)
+
+        return self.get_similar_response(question_norm)
+
+
+    def save_response(self, question, response):
+        question_norm = self._normalize_text(question)
+        cache_id = self._generate_id(question_norm)
+
+        embedding = self._get_embedding(question_norm)
+        if embedding is None:
+            logger.warning("Não foi possível gerar embedding, ignorando salvamento no cache.")
+            return False
+        
+        serialized = self._serialize_embedding(embedding)
+
+        try:
+            cursor = self.conn.execute(
+                "SELECT id FROM cache WHERE id = ?", (cache_id,)
+            )
+
+            if cursor.fetchone():
+                self.conn.execute(
+                    "UPDATE cache SET question = ?, response = ?, embedding = ? WHERE id = ?",
+                    (question_norm, json.dumps(response), serialized, cache_id)
+                )
+            else:
+                self.conn.execute(
+                    "INSERT INTO cache (id, question, response, embedding) VALUES (?, ?, ?, ?)",
+                    (cache_id, question_norm, json.dumps(response), serialized)
+                )
+
+            self.conn.commit()
+            return True
+
+        except Exception as e:
+            logger.error(f"Erro ao salvar cache: {e}")
+            return False
+    
+    def clean_old_cache(self):
+        try:
+            # Assuming settings.CACHE_EXPIRATION_DAYS is defined
+            expiration = datetime.now() - timedelta(days=settings.CACHE_EXPIRATION_DAYS)
+            self.conn.execute(
+                "DELETE FROM cache WHERE created_at < ?",
+                (expiration.strftime("%Y-%m-%d %H:%M:%S"),)
+            )
+            self.conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao limpar cache: {e}")
+            return False
+
+    def get_cache_stats(self):
+        try:
+            cursor = self.conn.execute(
+                "SELECT COUNT(*), SUM(usage_count) FROM cache"
+            )
+            total, uses = cursor.fetchone()
+
+            return {
+                "total_entries": total or 0,
+                "total_uses": uses or 0
+            }
+        except sqlite3.Error:
+            return {"total_entries": 0, "total_uses": 0}
+
+    def close(self):
+        try:
+            self.conn.close()
+        except:
+            pass
+            
+# ----------------------------------------------------
+# 📌 CORREÇÃO DO ERRO DE IMPORTAÇÃO: 
+# Adiciona a instância Singleton que o 'chat_manager' espera importar
+# ----------------------------------------------------
+
+cache_manager = ChatCache()

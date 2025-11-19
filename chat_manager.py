@@ -1,3 +1,4 @@
+# chat_manager.py
 import google.generativeai as genai
 import time
 import threading

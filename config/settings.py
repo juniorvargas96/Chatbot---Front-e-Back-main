@@ -1,3 +1,4 @@
+# chatbot_jp/config/settings.py
 import os
 from dotenv import load_dotenv
 
