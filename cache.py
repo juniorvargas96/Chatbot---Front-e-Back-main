@@ -10,7 +10,7 @@ import logging
 # import numpy as np
 
 # Importa as novas funções do módulo que chama o Gemini (ou inclua-as aqui)
-from .gemini_api import get_gemini_embedding, calculate_dot_product 
+from gemini_api import get_gemini_embedding, calculate_dot_produc
 
 logger = logging.getLogger(__name__)
 
