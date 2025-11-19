@@ -6,6 +6,8 @@ from utils import Colors
 import logging
 from datetime import datetime
 
+# 👉 IMPORT NECESSÁRIO (ÚNICA ADIÇÃO)
+from cache import cache_manager
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,6 @@ class ChatManager:
     ]
     """
 
-        
         return f"""
 Você é NPC, um assistente especializado em tirar dúvidas sobre o Programa Jovem Programador, uma iniciativa de capacitação tecnológica promovida em Santa Catarina.
 
@@ -106,19 +107,6 @@ Você é NPC, um assistente especializado em tirar dúvidas sobre o Programa Jov
 ---
 Esta é sua tarefa mais importante. Se a pergunta do usuário contiver o nome de uma cidade que está nos `DADOS_CIDADES` abaixo, sua prioridade MÁXIMA é executar a função 'BUSCAR_TELEFONE'. Ignore outras regras de proatividade e forneça o nome da cidade e seu telefone de forma clara e direta.
 
--   **Exemplo de pergunta:** "Tem na Palhoça?"
--   **Exemplo de execução da sua função interna:**
-    1.  Identificar "Palhoça".
-    2.  Buscar "Palhoça" nos `DADOS_CIDADES`.
-    3.  Encontrar o telefone "(48) 3341-9100".
-    4.  Formatar a resposta.
--   **Exemplo de resposta CORRETA (usando negrito):** "Sim, o programa está disponível em Palhoça! ✅ O contato da unidade do Senac na cidade é **(48) 3341-9100**. Posso te ajudar com outra cidade?"
-
----
-
-🧠 *Você é claro, simpático, informativo e sempre mantém o foco.*
-💬 Ao final de cada resposta, pergunte **qual parte do programa o usuário gostaria de saber mais**.
-
 ### DADOS DAS CIDADES
 {dados_cidades_formatado}
 
@@ -126,7 +114,7 @@ Esta é sua tarefa mais importante. Se a pergunta do usuário contiver o nome de
 {contexto}
 --- FIM DO CONTEÚDO DE REFERÊNCIA ---
 """
-    
+
     def _iniciar_sessao_chat(self):
         return self.model.start_chat(history=[
             {"role": "user", "parts": [self.prompt_inicial]},
@@ -138,33 +126,28 @@ Esta é sua tarefa mais importante. Se a pergunta do usuário contiver o nome de
             self.chat.history = self.chat.history[-settings.MAX_HISTORY * 2:]
     
     def enviar_mensagem(self, pergunta):
-        # Verificar cache primeiro (nova implementação)
         if cached_response := cache_manager.get_response(pergunta):
             logger.info(f"Resposta recuperada do cache para: {pergunta[:30]}...")
             return cached_response
         
         try:
-            # Validação original mantida
             if len(pergunta) > settings.TAMANHO_MAXIMO_PERGUNTA:
                 return "❌ Sua pergunta é muito longa. Por favor, resuma em até 500 caracteres."
             
-            # Spinner original mantido
             stop_spinner = threading.Event()
             spinner_thread = threading.Thread(target=self._mostrar_spinner, args=(stop_spinner,))
             spinner_thread.start()
             
-            # Chamada à API original
             response = self.chat.send_message(pergunta)
             self._manter_historico()
             
-            # Salvar no cache (nova implementação)
             cache_manager.save_response(pergunta, response.text)
             logger.info(f"Nova resposta salva no cache para: {pergunta[:30]}...")
             
             return response.text
         
         except Exception as e:
-            print(f"\n\n🚨 OCORREU UM ERRO NA API: {e}\n\n") # Adicione este print
+            print(f"\n\n🚨 OCORREU UM ERRO NA API: {e}\n\n")
             logger.error(f"Erro ao enviar mensagem: {str(e)}")
             return "⚠️ Desculpe, estou com dificuldades técnicas. Poderia repetir sua pergunta?"
         finally:
@@ -179,7 +162,6 @@ Esta é sua tarefa mais importante. Se a pergunta do usuário contiver o nome de
                 time.sleep(0.1)
         print("\r", end='', flush=True)
     
-    # Nova função para estatísticas (transição)
     def mostrar_estatisticas_cache(self):
         stats = cache_manager.get_usage_stats()
         print(f"\n{Colors.YELLOW}📊 Estatísticas do Cache:{Colors.RESET}")
@@ -190,7 +172,6 @@ Esta é sua tarefa mais importante. Se a pergunta do usuário contiver o nome de
             print(f"  - {q[:30]}...: {count} acessos")
 
 def iniciar_chat(contexto):
-    # Limpeza inicial do cache (nova implementação)
     cache_manager.clean_old_cache()
     
     chat_manager = ChatManager(contexto)
@@ -204,7 +185,6 @@ def iniciar_chat(contexto):
             if not pergunta:
                 continue
                 
-            # Comandos especiais (novos)
             if pergunta.lower() == '/stats':
                 chat_manager.mostrar_estatisticas_cache()
                 continue
@@ -223,17 +203,14 @@ def iniciar_chat(contexto):
             logger.error(f"Erro no loop de chat: {str(e)}")
             print(f"\n{Colors.RED}⚠️ Ocorreu um erro inesperado. Continuando...{Colors.RESET}")
 
-# Objeto global reutilizável
 chat_manager_instance = None
 
 def iniciar_chat_api(pergunta: str, contexto: dict) -> str:
     global chat_manager_instance
 
-    # Inicializa apenas uma vez (como singleton)
     if chat_manager_instance is None:
         cache_manager.clean_old_cache()
         chat_manager_instance = ChatManager(contexto)
 
-    # Envia pergunta para o modelo
     resposta = chat_manager_instance.enviar_mensagem(pergunta)
     return resposta

@@ -17,18 +17,19 @@ logger = logging.getLogger(__name__)
 # Variável global para manter o contexto carregado sob demanda
 contexto_global = None
 
+
 # -------------------- Lifespan (Startup & Shutdown) -------------------- #
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         configurar_logging()
-        logger.info("🚀 Iniciando API (carregamento de contexto será sob demanda).")
+        logger.info("🚀 Iniciando API (carregamento de contexto sob demanda).")
         yield  # API ativa aqui
     finally:
-        logger.info("🔒 Encerrando aplicação... (sem cache manager)")
-        # removido cache_manager.close()
-        logger.info("✅ Encerramento concluído.")
+        logger.info("🔒 Encerrando aplicação.")
+        # Removido cache_manager (pois não existe no projeto)
+
 
 # ------------------------- Inicialização FastAPI ------------------------ #
 
@@ -49,24 +50,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # ----------------------- Carregamento sob demanda ----------------------- #
 
 async def get_contexto():
     """
     Carrega o contexto somente quando necessário.
-    Evita estouro de memória no Render durante o deploy.
+    Evita estouro de memória no Render.
     """
     global contexto_global
     if contexto_global is None:
         logger.info("⏳ Carregando contexto sob demanda...")
         contexto_global = carregar_contexto(settings.URLS_PARA_SCRAPING, settings.USE_CACHE)
-        logger.info("✅ Contexto carregado sob demanda.")
+        logger.info("✅ Contexto carregado com sucesso.")
     return contexto_global
+
 
 # ----------------------------- Models ----------------------------- #
 
 class Mensagem(BaseModel):
     texto: str
+
 
 # ---------------------------- Rotas ----------------------------- #
 
@@ -80,7 +84,3 @@ async def chat(mensagem: Mensagem):
         logger.exception("Erro ao processar pergunta")
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
-
-@app.get("/cache/stats", summary="Placeholder (sem cache manager)")
-def stats():
-    return {"cache": "disabled"}
